@@ -15,6 +15,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
 import { otpSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
@@ -49,7 +50,7 @@ const Verify = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <Label>Username</Label>
                 <FormControl>
                   <Input
                     className="h-10 bg-secondary"
@@ -67,7 +68,7 @@ const Verify = () => {
             name="otp"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>One-Time Password</FormLabel>
+                <Label>One-Time Password</Label>
                 <FormControl>
                   <InputOTP
                     pattern={REGEXP_ONLY_DIGITS}
@@ -110,7 +111,9 @@ const Verify = () => {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit" className="w-full" size={"lg"}>
+            Submit
+          </Button>
         </form>
       </Form>
     </div>
