@@ -10,10 +10,7 @@ const AuthPage = () => {
         <div>
           <h1 className="text-4xl font-bold">Telegram</h1>
         </div>
-        <p className="text-center text-muted-foreground text-sm">
-          Telegram is a messaging app with a focus on speed and security, it
-          {"'"}s super-fast, simple and free
-        </p>
+       
         <StateAuth />
         <Social />
       </div>
