@@ -43,7 +43,7 @@
 }
 
 :root {
-  --radius: 0.65rem;
+  --radius: none;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -119,6 +119,6 @@
     @apply bg-background text-foreground font-spaceGrotesk;
   }
   .container2 {
-    @apply flex items-center justify-center w-full;
+    @apply flex items-center justify-center w-full p-[1rem];
   }
 }
