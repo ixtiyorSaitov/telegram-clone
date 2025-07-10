@@ -118,4 +118,7 @@
   body {
     @apply bg-background text-foreground font-spaceGrotesk;
   }
+  .container2 {
+    @apply flex items-center justify-center w-full;
+  }
 }
