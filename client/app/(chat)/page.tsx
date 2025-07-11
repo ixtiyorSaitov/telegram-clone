@@ -5,14 +5,29 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AddContact from "./_components/add-contact";
 import { useCurrentContact } from "@/hooks/use-current";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { emailSchema } from "@/lib/validation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const HomePage = () => {
   const { currentContact } = useCurrentContact();
   const router = useRouter();
 
+  const contactForm = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
   useEffect(() => {
     router.replace("/");
   }, []);
+
+  const onCreateContact = (values: z.infer<typeof emailSchema>) => {
+    console.log(values);
+  };
 
   return (
     <>
@@ -30,7 +45,12 @@ const HomePage = () => {
       {/* Chat area */}
       <div className="pl-80 w-full">
         {/* Add contact */}
-        {!currentContact && <AddContact />}
+        {!currentContact && (
+          <AddContact
+            contactForm={contactForm}
+            onCreateContact={onCreateContact}
+          />
+        )}
         {/* Chat */}
 
         {currentContact && <div>Chat</div>}
