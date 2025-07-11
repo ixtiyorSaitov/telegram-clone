@@ -16,6 +16,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
 import { otpSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
@@ -23,16 +24,18 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 const Verify = () => {
+  const { email } = useAuth();
   const form = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: {
-      email: "",
+      email,
       otp: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof otpSchema>) {
     console.log(values);
+    window.open("/", "_self");
   }
   return (
     <div className="w-full">
@@ -53,6 +56,7 @@ const Verify = () => {
                 <Label>Username</Label>
                 <FormControl>
                   <Input
+                    disabled
                     className="h-10 bg-secondary"
                     placeholder="info@ixtiyor.ai"
                     {...field}
