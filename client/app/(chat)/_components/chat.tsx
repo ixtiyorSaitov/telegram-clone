@@ -1,4 +1,4 @@
-import ChatLoading from "@/components/loadings/chat.loading";
+import MessageCard from "@/components/cards/message.card";
 
 const Chat = () => {
   return (
@@ -6,7 +6,7 @@ const Chat = () => {
       {/* Loading */}
       {/* <ChatLoading /> */}
       {/* Messages */}
-      {/* <MessageCard isReceived /> */}
+      <MessageCard isReceived />
 
       {/* Message input */}
     </div>
