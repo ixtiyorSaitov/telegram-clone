@@ -1,6 +1,19 @@
+"use client";
+
 import ContactList from "./_components/contact-list";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import AddContact from "./_components/add-contact";
+import { useCurrentContact } from "@/hooks/use-current";
 
 const HomePage = () => {
+  const { currentContact } = useCurrentContact();
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/");
+  }, []);
+
   return (
     <>
       {/* Sidebar */}
@@ -15,6 +28,13 @@ const HomePage = () => {
       </div>
 
       {/* Chat area */}
+      <div className="pl-80 w-full">
+        {/* Add contact */}
+        {!currentContact && <AddContact />}
+        {/* Chat */}
+
+        {currentContact && <div>Chat</div>}
+      </div>
     </>
   );
 };
