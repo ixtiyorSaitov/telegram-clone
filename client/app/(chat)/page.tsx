@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { emailSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import TopChat from "./_components/top-chat";
+import Chat from "./_components/chat";
 
 const HomePage = () => {
   const { currentContact } = useCurrentContact();
@@ -53,7 +55,14 @@ const HomePage = () => {
         )}
         {/* Chat */}
 
-        {currentContact && <div>Chat</div>}
+        {currentContact && (
+          <div className="w-full relative">
+            {/* Top chat */}
+            <TopChat />
+            {/* Chat message */}
+            <Chat />
+          </div>
+        )}
       </div>
     </>
   );
