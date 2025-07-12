@@ -1,3 +1,7 @@
+import DangerZoneForm from "@/components/forms/danger-zone.form";
+import EmailForm from "@/components/forms/email.form";
+import InformationForm from "@/components/forms/information.form";
+import NotificationForm from "@/components/forms/notification.form";
 import {
   Accordion,
   AccordionContent,
@@ -134,7 +138,7 @@ const Settings = () => {
                 Basic information
               </AccordionTrigger>
               <AccordionContent className="px-2 mt-2">
-                {/* <InformationForm /> */}
+                <InformationForm />
               </AccordionContent>
             </AccordionItem>
 
@@ -143,7 +147,7 @@ const Settings = () => {
                 Email
               </AccordionTrigger>
               <AccordionContent className="px-2 mt-2">
-                {/* <EmailForm /> */}
+                <EmailForm />
               </AccordionContent>
             </AccordionItem>
 
@@ -152,7 +156,7 @@ const Settings = () => {
                 Notification
               </AccordionTrigger>
               <AccordionContent className="mt-2">
-                {/* <NotificationForm /> */}
+                <NotificationForm />
               </AccordionContent>
             </AccordionItem>
 
@@ -161,7 +165,7 @@ const Settings = () => {
                 Danger zone
               </AccordionTrigger>
               <AccordionContent className="my-2 px-2">
-                {/* <DangerZoneForm /> */}
+                <DangerZoneForm />
               </AccordionContent>
             </AccordionItem>
           </Accordion>
