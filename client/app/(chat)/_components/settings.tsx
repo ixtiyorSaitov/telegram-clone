@@ -1,3 +1,10 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -5,6 +12,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import {
   LogIn,
@@ -12,6 +26,7 @@ import {
   Moon,
   Settings2,
   Sun,
+  Upload,
   UserPlus,
   VolumeOff,
 } from "lucide-react";
@@ -89,6 +104,69 @@ const Settings = () => {
           </div>
         </PopoverContent>
       </Popover>
+
+      <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+        <SheetContent side={"left"} className="w-80 p-2">
+          <SheetHeader>
+            <SheetTitle className="text-2xl">My profile</SheetTitle>
+            <SheetDescription>
+              Setting up your profile will help you connect with your friends
+              and family easily.
+            </SheetDescription>
+          </SheetHeader>
+
+          <Separator className="my-2" />
+
+          <div className="mx-auto w-1/2 h-36 relative">
+            <Avatar className="w-full h-36">
+              <AvatarFallback className="text-6xl uppercase font-spaceGrotesk">
+                IS
+              </AvatarFallback>
+            </Avatar>
+            <Button size={"icon"} className="absolute right-0 bottom-0">
+              <Upload size={16} />
+            </Button>
+          </div>
+
+          <Accordion type="single" collapsible className="mt-4">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="bg-secondary px-2">
+                Basic information
+              </AccordionTrigger>
+              <AccordionContent className="px-2 mt-2">
+                {/* <InformationForm /> */}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2" className="mt-2">
+              <AccordionTrigger className="bg-secondary px-2">
+                Email
+              </AccordionTrigger>
+              <AccordionContent className="px-2 mt-2">
+                {/* <EmailForm /> */}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3" className="mt-2">
+              <AccordionTrigger className="bg-secondary px-2">
+                Notification
+              </AccordionTrigger>
+              <AccordionContent className="mt-2">
+                {/* <NotificationForm /> */}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4" className="mt-2">
+              <AccordionTrigger className="bg-secondary px-2">
+                Danger zone
+              </AccordionTrigger>
+              <AccordionContent className="my-2 px-2">
+                {/* <DangerZoneForm /> */}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
