@@ -7,7 +7,7 @@ import AddContact from "./_components/add-contact";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useForm } from "react-hook-form";
 import z from "zod";
-import { emailSchema } from "@/lib/validation";
+import { emailSchema, messageSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TopChat from "./_components/top-chat";
 import Chat from "./_components/chat";
@@ -22,12 +22,24 @@ const HomePage = () => {
       email: "",
     },
   });
+  const messageForm = useForm<z.infer<typeof messageSchema>>({
+    resolver: zodResolver(messageSchema),
+    defaultValues: {
+      text: "",
+      image: "",
+    },
+  });
 
   useEffect(() => {
     router.replace("/");
   }, []);
 
   const onCreateContact = (values: z.infer<typeof emailSchema>) => {
+    console.log(values);
+  };
+
+  const onSendMessage = (values: z.infer<typeof messageSchema>) => {
+    // Api call to send message
     console.log(values);
   };
 
@@ -60,7 +72,7 @@ const HomePage = () => {
             {/* Top chat */}
             <TopChat />
             {/* Chat message */}
-            <Chat />
+            <Chat messageForm={messageForm} onSendMessage={onSendMessage} />
           </div>
         )}
       </div>
