@@ -81,11 +81,46 @@ const HomePage = () => {
 };
 
 const contacts = [
-  { email: "john@gmail.com", _id: "1", avatar: "" },
-  { email: "jane@gmail.com", _id: "2", avatar: "" },
-  { email: "jim@gmail.com", _id: "3", avatar: "" },
-  { email: "jill@gmail.com", _id: "4", avatar: "" },
-  { email: "jimmy@gmail.com", _id: "5", avatar: "" },
+  {
+    email: "john@gmail.com",
+    _id: "1",
+    avatar: "",
+    firstName: "John",
+    lastName: "Doe",
+    bio: "Hello, I'm John",
+  },
+  {
+    email: "jane@gmail.com",
+    _id: "2",
+    avatar: "",
+    firstName: "Jane",
+    lastName: "Doe",
+    bio: "Hello, I'm Jane",
+  },
+  {
+    email: "jim@gmail.com",
+    _id: "3",
+    avatar: "",
+    firstName: "Jim",
+    lastName: "Doe",
+    bio: "Hello, I'm Jim",
+  },
+  {
+    email: "jill@gmail.com",
+    _id: "4",
+    avatar: "",
+    firstName: "Jill",
+    lastName: "Doe",
+    bio: "Hello, I'm Jill",
+  },
+  {
+    email: "jimmy@gmail.com",
+    _id: "5",
+    avatar: "",
+    firstName: "Jimmy",
+    lastName: "Doe",
+    bio: "Hello, I'm Jimmy",
+  },
 ];
 
 export default HomePage;
