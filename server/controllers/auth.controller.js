@@ -1,3 +1,4 @@
+const BaseError = require("../errors/base.error");
 const userModel = require("../models/user.model");
 
 class AuthController {
@@ -6,7 +7,9 @@ class AuthController {
       const { email, password } = req.body;
       const existUser = await userModel.findOne({ email });
       if (existUser) {
-        return res.status(400).json({ message: "Email already exists" });
+        throw BaseError.BadRequest("User already exists", [
+          { email: "Email already exists" },
+        ]);
       }
       const createdUser = await userModel.create({ email });
       res.status(201).json(createdUser);
