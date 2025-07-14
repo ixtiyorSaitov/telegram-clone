@@ -1,5 +1,5 @@
 const { Schema, model } = require("mongoose");
-const { CONST } = require("../lib/constants");
+const CONST = require("../lib/constants");
 
 const messageSchema = new Schema({
   sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
