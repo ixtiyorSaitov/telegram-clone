@@ -164,7 +164,7 @@ class UserController {
         throw BaseError.BadRequest("This email already exists");
       }
       await mailService.sendOtp(email);
-      res.status(200).json({ message: "OTP sent successfully" });
+      res.status(200).json({ email });
     } catch (error) {
       next(error);
     }
@@ -188,7 +188,7 @@ class UserController {
   // [PUT] /api/user/email
   async updateEmail(req, res, next) {
     try {
-      const userId = "6874883189a5014802fe62f1";
+      const userId = req.user._id;
       const { email, otp } = req.body;
       const result = await mailService.verifyOtp(email, otp);
       if (!result) {
