@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import QueryProvider from "@/components/providers/query.provider";
 import { Toaster } from "@/components/ui/sonner";
+import SessionProvider from "@/components/providers/session.provider";
 
 const spaceGrotesk = Space_Grotesk({
   weight: ["400", "500", "600", "700", "300"],
@@ -25,23 +26,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <QueryProvider>
-      <html lang="en" suppressHydrationWarning={true}>
-        <body
-          suppressHydrationWarning={true}
-          className={`${spaceGrotesk.variable} antialiased`}
-        >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Toaster />
-            <main>{children}</main>
-          </ThemeProvider>
-        </body>
-      </html>
-    </QueryProvider>
+  <SessionProvider>
+      <QueryProvider>
+        <html lang="en" suppressHydrationWarning={true}>
+          <body
+            suppressHydrationWarning={true}
+            className={`${spaceGrotesk.variable} antialiased`}
+            >
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+              >
+              <Toaster />
+              <main>{children}</main>
+            </ThemeProvider>
+          </body>
+        </html>
+      </QueryProvider>
+    </SessionProvider>
   );
 }

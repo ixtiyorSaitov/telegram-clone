@@ -2,8 +2,13 @@ import { FaTelegram } from "react-icons/fa";
 import StateAuth from "./_component/state";
 import Social from "./_component/social";
 import { ModeToggle } from "@/components/shared/mode-toggle";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { redirect } from "next/navigation";
 
-const AuthPage = () => {
+const AuthPage =async () => {
+  const session = await getServerSession(authOptions)
+  if(session) return redirect('/')
   return (
     <div className="container2">
       <div className=" w-full max-w-md h-screen flex justify-center items-center flex-col space-y-4">

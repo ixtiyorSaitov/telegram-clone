@@ -2,10 +2,8 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -26,9 +24,11 @@ import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
+import { signIn } from 'next-auth/react'
 
 const Verify = () => {
   const { email } = useAuth();
+
   const form = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
     defaultValues: {
@@ -49,7 +49,8 @@ const Verify = () => {
       return data;
     },
     onSuccess: ({ user }) => {
-      console.log(user);
+      signIn('credentials', { email: user.email, callbackUrl: '/' })
+      toast.success('Success', { description: "Successfuly verified" })
     },
     onError: (error: IError) => {
       if (error.response?.data?.message) {
@@ -63,8 +64,6 @@ const Verify = () => {
 
   function onSubmit(values: z.infer<typeof otpSchema>) {
     mutate(values.otp);
-    // console.log(values);
-    // window.open("/", "_self");
   }
   return (
     <div className="w-full">
