@@ -23,6 +23,10 @@ class AuthController {
     try {
       const { email, otp } = req.body;
       const result = await mailService.verifyOtp(email);
+      if (result) {
+        await userModel.findOneAndUpdate({ email }, { isVerified: true });
+        res.status(200).json({ message: "verified" });
+      }
     } catch (error) {
       next(error);
     }

@@ -42,6 +42,12 @@ class MailService {
     if (currentOtp.expireAt < new Date()) {
       throw BaseError.BadRequest("Your otp is expired");
     }
+
+    const isValid = await bcrypt.compare(otp.toString(), currentOtp.otp);
+    if (!isValid) throw BaseError.BadRequest("Invalid OTP entered");
+
+    await otpModel.deleteMany({ email }); // Clear OTP after verification
+    return true;
   }
 }
 
