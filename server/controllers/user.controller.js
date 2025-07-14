@@ -63,8 +63,6 @@ class UserController {
     }
   }
 
-  
-
   // [POST] /api/user/message
   async createMessage(req, res, next) {
     try {
