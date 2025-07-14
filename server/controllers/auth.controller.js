@@ -22,7 +22,7 @@ class AuthController {
   async verify(req, res, next) {
     try {
       const { email, otp } = req.body;
-      const result = await mailService.verifyOtp(email);
+      const result = await mailService.verifyOtp(email, otp);
       if (result) {
         await userModel.findOneAndUpdate({ email }, { isVerified: true });
         res.status(200).json({ message: "verified" });

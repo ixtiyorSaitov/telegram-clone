@@ -33,7 +33,7 @@ class MailService {
     });
   }
 
-  async verifyOtp(email) {
+  async verifyOtp(email, otp) {
     const otpData = await otpModel.find({ email });
     if (!otpData || otpData.length === 0) {
       throw BaseError.BadRequest("Otp not found");
