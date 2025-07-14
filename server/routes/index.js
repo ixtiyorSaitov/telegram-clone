@@ -15,6 +15,7 @@ router.post("/user/send-otp", userController.sendOtp);
 router.put("/user/profile", userController.updateProfile);
 router.put("/user/message/:messageId", userController.updateMessage);
 router.put("/user/email", userController.updateEmail);
+router.delete("/user", userController.deleteUser);
 router.delete("/user/message/:messageId", userController.deleteMessage);
 
 module.exports = router;
