@@ -11,8 +11,10 @@ router.get("/user/contacts", userController.getContacts);
 router.post("/user/message", userController.createMessage);
 router.post("/user/contact", userController.createContact);
 router.post("/user/reaction", userController.createReaction);
+router.post("/user/send-otp", userController.sendOtp);
 router.put("/user/profile", userController.updateProfile);
 router.put("/user/message/:messageId", userController.updateMessage);
+router.put("/user/email", userController.updateEmail);
 router.delete("/user/message/:messageId", userController.deleteMessage);
 
 module.exports = router;

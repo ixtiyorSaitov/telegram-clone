@@ -2,6 +2,7 @@ const BaseError = require("../errors/base.error");
 const CONST = require("../lib/constants");
 const messageModel = require("../models/message.model");
 const userModel = require("../models/user.model");
+const mailService = require("../service/mail.service");
 
 class UserController {
   // [GET] /api/user/contacts
@@ -136,6 +137,20 @@ class UserController {
       next(error);
     }
   }
+  // [POST] /api/user/send-otp
+  async sendOtp(req, res, next) {
+    try {
+      const { email } = req.body;
+      const existingUser = await userModel.findOne({ email });
+      if (existingUser) {
+        throw BaseError.BadRequest("This email already exists");
+      }
+      await mailService.sendOtp(email);
+      res.status(200).json({ message: "OTP sent successfully" });
+    } catch (error) {
+      next(error);
+    }
+  }
 
   // [PUT] /api/user/message/:messageId
   async updateMessage(req, res, next) {
@@ -148,6 +163,25 @@ class UserController {
         { new: true }
       );
       res.status(200).json({ updatedMessage });
+    } catch (error) {
+      next(error);
+    }
+  }
+  // [PUT] /api/user/email
+  async updateEmail(req, res, next) {
+    try {
+      const userId = "6874883189a5014802fe62f1";
+      const { email, otp } = req.body;
+      const result = await mailService.verifyOtp(email, otp);
+      if (!result) {
+        throw BaseError.BadRequest("Invalid OTP");
+      }
+      const user = await userModel.findByIdAndUpdate(
+        userId,
+        { email },
+        { new: true }
+      );
+      res.status(200).json({ user });
     } catch (error) {
       next(error);
     }
