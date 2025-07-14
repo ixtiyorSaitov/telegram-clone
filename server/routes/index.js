@@ -9,6 +9,7 @@ router.post("/auth/verify", authController.verify);
 router.get("/user/messages/:contactId", userController.getMessages);
 router.get("/user/contacts", userController.getContacts);
 router.post("/user/message", userController.createMessage);
+router.post("/user/message-read", userController.messageRead);
 router.post("/user/contact", userController.createContact);
 router.post("/user/reaction", userController.createReaction);
 router.post("/user/send-otp", userController.sendOtp);

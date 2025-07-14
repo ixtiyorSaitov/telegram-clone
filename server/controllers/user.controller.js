@@ -84,6 +84,24 @@ class UserController {
       next(error);
     }
   }
+  // [POST] /api/user/message-read
+  async messageRead(req, res, next) {
+    try {
+      const { messages } = req.body;
+      const allMessages = [];
+      for (const message of messages) {
+        const updatedMessage = await messageModel.findByIdAndUpdate(
+          message._id,
+          { status: CONST.READ },
+          { new: true }
+        );
+        allMessages.push(updatedMessage);
+      }
+      res.status(200).json({ messages: allMessages });
+    } catch (error) {
+      next(error);
+    }
+  }
   // [POST] /api/user/contact
   async createContact(req, res, next) {
     try {
