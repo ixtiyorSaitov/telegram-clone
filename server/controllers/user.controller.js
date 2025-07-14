@@ -122,6 +122,20 @@ class UserController {
       next(error);
     }
   }
+  // [POST] /api/user/reaction
+  async createReaction(req, res, next) {
+    try {
+      const { messageId, reaction } = req.body;
+      const updatedMessage = await messageModel.findByIdAndUpdate(
+        messageId,
+        { reaction },
+        { new: true }
+      );
+      res.status(201).json({ updatedMessage });
+    } catch (error) {
+      next(error);
+    }
+  }
 
   // [PUT] /api/user/message/:messageId
   async updateMessage(req, res, next) {
@@ -134,6 +148,27 @@ class UserController {
         { new: true }
       );
       res.status(200).json({ updatedMessage });
+    } catch (error) {
+      next(error);
+    }
+  }
+  // [PUT] /api/user/profile
+  async updateProfile(req, res, next) {
+    try {
+      const { userId, ...payload } = req.body;
+      await userModel.findByIdAndUpdate(userId, payload, { new: true });
+      res.status(200).json({ message: "Profile updated successfully" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // [DELETE] /api/user/message/:messageId
+  async deleteMessage(req, res, next) {
+    try {
+      const { messageId } = req.params;
+      await messageModel.findByIdAndDelete(messageId);
+      res.status(200).json({ message: "Message deleted successfully" });
     } catch (error) {
       next(error);
     }
