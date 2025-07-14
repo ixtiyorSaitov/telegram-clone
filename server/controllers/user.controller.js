@@ -1,5 +1,7 @@
+const BaseError = require("../errors/base.error");
 const CONST = require("../lib/constants");
 const messageModel = require("../models/message.model");
+const userModel = require("../models/user.model");
 
 class UserController {
   // [GET] /api/user/messages/:contactId
@@ -49,6 +51,46 @@ class UserController {
         });
 
       res.status(201).json({ newMessage: currentMessage });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // [POST] /api/user/create-contact
+  async createContact(req, res, next) {
+    try {
+      const { email } = req.body;
+      const userId = "6874883189a5014802fe62f1";
+      const user = await userModel.findById(userId);
+      const contact = await userModel.findOne({ email });
+      if (!contact) {
+        throw BaseError.BadRequest("User with this email does not exist");
+      }
+
+      if (user.email === contact.email) {
+        throw BaseError.BadRequest("You cannot add yourself as a contact");
+      }
+
+      const existingContact = await userModel.findOne({
+        _id: userId,
+        contacts: contact._id,
+      });
+      if (existingContact) {
+        throw BaseError.BadRequest("This contact already exists");
+      }
+
+      await userModel.findByIdAndUpdate(
+        userId,
+        { $push: { contacts: contact._id } },
+        { new: true }
+      );
+      await userModel.findByIdAndUpdate(
+        contact._id,
+        { $push: { contacts: userId } },
+        { new: true }
+      );
+
+      res.status(201).json({ message: "Contact created successfully" });
     } catch (error) {
       next(error);
     }

@@ -6,7 +6,8 @@ const router = express.Router();
 router.post("/auth/login", authController.login);
 router.post("/auth/verify", authController.verify);
 
-router.post("/user/create-message", userController.createMessage);
 router.get("/user/messages/:contactId", userController.getMessages);
+router.post("/user/create-message", userController.createMessage);
+router.post("/user/create-contact", userController.createContact);
 
 module.exports = router;
