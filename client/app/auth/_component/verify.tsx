@@ -17,10 +17,14 @@ import {
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
+import { axiosClient } from "@/http/axios";
 import { otpSchema } from "@/lib/validation";
+import { IError, IUser } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 const Verify = () => {
@@ -33,9 +37,34 @@ const Verify = () => {
     },
   });
 
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (otp: string) => {
+      const { data } = await axiosClient.post<{ user: IUser }>(
+        "/api/auth/verify",
+        {
+          email,
+          otp,
+        }
+      );
+      return data;
+    },
+    onSuccess: ({ user }) => {
+      console.log(user);
+    },
+    onError: (error: IError) => {
+      if (error.response?.data?.message) {
+        return toast.error("Error", {
+          description: error.response.data.message,
+        });
+      }
+      return toast.error("Error", { description: "Something went wrong" });
+    },
+  });
+
   function onSubmit(values: z.infer<typeof otpSchema>) {
-    console.log(values);
-    window.open("/", "_self");
+    mutate(values.otp);
+    // console.log(values);
+    // window.open("/", "_self");
   }
   return (
     <div className="w-full">
@@ -75,6 +104,7 @@ const Verify = () => {
                 <Label>One-Time Password</Label>
                 <FormControl>
                   <InputOTP
+                    disabled={isPending}
                     pattern={REGEXP_ONLY_DIGITS}
                     maxLength={6}
                     {...field}
@@ -115,7 +145,12 @@ const Verify = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" size={"lg"}>
+          <Button
+            disabled={isPending}
+            type="submit"
+            className="w-full"
+            size={"lg"}
+          >
             Submit
           </Button>
         </form>

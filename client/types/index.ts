@@ -5,6 +5,15 @@ export interface IUser {
   firstName: string;
   lastName: string;
   bio: string;
+  isVerified: boolean;
+  muted: boolean;
+  notificationSound:  string;
+  sendingSound: string;
+  contacts: IUser[]
+}
+
+export interface IError {
+  response: { data: { message: string } };
 }
 
 export interface ChildProps {

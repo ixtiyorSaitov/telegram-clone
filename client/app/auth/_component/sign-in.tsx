@@ -12,9 +12,11 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { axiosClient } from "@/http/axios";
 import { emailSchema } from "@/lib/validation";
+import { IError } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 const SignIn = () => {
@@ -27,20 +29,33 @@ const SignIn = () => {
     },
   });
 
-  const {} = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (email: string) => {
-      const {} = await axiosClient.post("/api/auth/login", { email });
+      const { data } = await axiosClient.post<{ email: string }>(
+        "/api/auth/login",
+        {
+          email,
+        }
+      );
+      return data;
     },
-    onSuccess: () => {
-      setEmail(form.getValues("email"));
+    onSuccess: (response) => {
+      setEmail(response.email);
       setStep("verify");
+      toast("Email sent");
+    },
+    onError: (error: IError) => {
+      if (error.response?.data?.message) {
+        return toast.error("Error", {
+          description: error.response.data.message,
+        });
+      }
+      return toast.error("Error", { description: "Something went wrong" });
     },
   });
 
   function onSubmit(values: z.infer<typeof emailSchema>) {
-    console.log(values);
-    setStep("verify");
-    setEmail(values.email);
+    mutate(values.email);
   }
   return (
     <div className="w-full">
@@ -60,6 +75,7 @@ const SignIn = () => {
                   <Input
                     className="h-10 bg-secondary"
                     placeholder="info@ixtiyor.ai"
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -68,7 +84,12 @@ const SignIn = () => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" size={"lg"}>
+          <Button
+            disabled={isPending}
+            type="submit"
+            className="w-full"
+            size={"lg"}
+          >
             Submit
           </Button>
         </form>
