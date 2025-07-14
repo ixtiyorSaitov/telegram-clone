@@ -4,6 +4,34 @@ const messageModel = require("../models/message.model");
 const userModel = require("../models/user.model");
 
 class UserController {
+  // [GET] /api/user/contacts
+  async getContacts(req, res, next) {
+    try {
+      const userId = "6874883189a5014802fe62f1";
+
+      const contacts = await userModel.findById(userId).populate("contacts");
+      const allContacts = contacts.contacts;
+
+      for (const contact of allContacts) {
+        const lastMessage = await messageModel
+          .findOne({
+            $or: [
+              { sender: userId, receiver: contact._id },
+              { sender: contact._id, receiver: userId },
+            ],
+          })
+          .populate({ path: "sender" })
+          .populate({ path: "receiver" })
+          .sort({ createdAt: -1 });
+
+        contact.lastMessage = lastMessage;
+      }
+
+      return res.status(200).json({ contacts: allContacts });
+    } catch (error) {
+      next(error);
+    }
+  }
   // [GET] /api/user/messages/:contactId
   async getMessages(req, res) {
     try {
@@ -35,7 +63,9 @@ class UserController {
     }
   }
 
-  // [POST] /api/user/create-message
+  
+
+  // [POST] /api/user/message
   async createMessage(req, res, next) {
     try {
       const newMessage = await messageModel.create(req.body);
@@ -55,8 +85,7 @@ class UserController {
       next(error);
     }
   }
-
-  // [POST] /api/user/create-contact
+  // [POST] /api/user/contact
   async createContact(req, res, next) {
     try {
       const { email } = req.body;
@@ -79,18 +108,18 @@ class UserController {
         throw BaseError.BadRequest("This contact already exists");
       }
 
-      await userModel.findByIdAndUpdate(
-        userId,
-        { $push: { contacts: contact._id } },
-        { new: true }
-      );
-      await userModel.findByIdAndUpdate(
+      await userModel.findByIdAndUpdate(userId, {
+        $push: { contacts: contact._id },
+      });
+      const addedContact = await userModel.findByIdAndUpdate(
         contact._id,
         { $push: { contacts: userId } },
         { new: true }
       );
 
-      res.status(201).json({ message: "Contact created successfully" });
+      res
+        .status(201)
+        .json({ message: "Contact added successfully", contact: addedContact });
     } catch (error) {
       next(error);
     }

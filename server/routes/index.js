@@ -7,7 +7,8 @@ router.post("/auth/login", authController.login);
 router.post("/auth/verify", authController.verify);
 
 router.get("/user/messages/:contactId", userController.getMessages);
-router.post("/user/create-message", userController.createMessage);
-router.post("/user/create-contact", userController.createContact);
+router.get("/user/contacts", userController.getContacts);
+router.post("/user/message", userController.createMessage);
+router.post("/user/contact", userController.createContact);
 
 module.exports = router;
