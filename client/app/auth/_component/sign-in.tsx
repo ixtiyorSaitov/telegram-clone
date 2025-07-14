@@ -10,17 +10,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { axiosClient } from "@/http/axios";
 import { emailSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
 const SignIn = () => {
   const { setEmail, setStep } = useAuth();
+
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
     defaultValues: {
       email: "",
+    },
+  });
+
+  const {} = useMutation({
+    mutationFn: async (email: string) => {
+      const {} = await axiosClient.post("/api/auth/login", { email });
+    },
+    onSuccess: () => {
+      setEmail(form.getValues("email"));
+      setStep("verify");
     },
   });
 
