@@ -122,6 +122,22 @@ class UserController {
       next(error);
     }
   }
+
+  // [PUT] /api/user/message/:messageId
+  async updateMessage(req, res, next) {
+    try {
+      const { messageId } = req.params;
+      const { text } = req.body;
+      const updatedMessage = await messageModel.findByIdAndUpdate(
+        messageId,
+        { text },
+        { new: true }
+      );
+      res.status(200).json({ updatedMessage });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new UserController();

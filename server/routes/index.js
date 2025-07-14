@@ -10,5 +10,6 @@ router.get("/user/messages/:contactId", userController.getMessages);
 router.get("/user/contacts", userController.getContacts);
 router.post("/user/message", userController.createMessage);
 router.post("/user/contact", userController.createContact);
+router.put("/user/message/:messageId", userController.updateMessage);
 
 module.exports = router;
