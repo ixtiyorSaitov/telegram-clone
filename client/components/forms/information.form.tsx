@@ -14,16 +14,53 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import { useMutation } from "@tanstack/react-query";
+import { axiosClient } from "@/http/axios";
+import { IError, IUser } from "@/types";
+import { signIn, useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { generateToken } from "@/lib/generate-token";
 
 const InformationForm = () => {
+  const { data: session, update } = useSession();
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { firstName: "", lastName: "", bio: "" },
+    defaultValues: {
+      firstName: session?.currentUser.firstName,
+      lastName: session?.currentUser.lastName,
+      bio: session?.currentUser.bio || "",
+    },
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (payload: z.infer<typeof profileSchema>) => {
+      const token = await generateToken(session?.currentUser._id);
+      console.log(token);
+
+      const { data } = await axiosClient.put("/api/user/profile", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+      update();
+    },
+    onError: (error: IError) => {
+      if (error.response?.data?.message) {
+        return toast.error("Error", {
+          description: error.response.data.message,
+        });
+      }
+
+      return toast.error("Error", { description: "Something went wrong" });
+    },
   });
 
   const onSubmit = (data: z.infer<typeof profileSchema>) => {
     // Handle form submission
     console.log(data);
+    mutate(data);
   };
 
   return (
@@ -36,7 +73,12 @@ const InformationForm = () => {
             <FormItem>
               <Label>First name</Label>
               <FormControl>
-                <Input placeholder="Oman" className="bg-secondary" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="Oman"
+                  className="bg-secondary"
+                  {...field}
+                />
               </FormControl>
               <FormMessage className="text-xs text-red-500" />
             </FormItem>
@@ -49,7 +91,12 @@ const InformationForm = () => {
             <FormItem>
               <Label>Last name</Label>
               <FormControl>
-                <Input placeholder="Ali" className="bg-secondary" {...field} />
+                <Input
+                  disabled={isPending}
+                  placeholder="Ali"
+                  className="bg-secondary"
+                  {...field}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -62,6 +109,7 @@ const InformationForm = () => {
               <FormLabel>Bio</FormLabel>
               <FormControl>
                 <Textarea
+                  disabled={isPending}
                   placeholder="Enter anyhting about yourself"
                   className="bg-secondary"
                   {...field}
@@ -70,7 +118,7 @@ const InformationForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
+        <Button disabled={isPending} type="submit" className="w-full">
           Submit
         </Button>
       </form>

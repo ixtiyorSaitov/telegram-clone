@@ -207,8 +207,8 @@ class UserController {
   // [PUT] /api/user/profile
   async updateProfile(req, res, next) {
     try {
-      const { userId, ...payload } = req.body;
-      await userModel.findByIdAndUpdate(userId, payload, { new: true });
+      const user = req.user;
+      await userModel.findByIdAndUpdate(user._id, req.body, { new: true });
       res.status(200).json({ message: "Profile updated successfully" });
     } catch (error) {
       next(error);

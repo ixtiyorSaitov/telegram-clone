@@ -1,6 +1,7 @@
 const express = require("express");
 const authController = require("../controllers/auth.controller");
 const userController = require("../controllers/user.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
 
 router.post("/auth/login", authController.login);
@@ -13,7 +14,7 @@ router.post("/user/message-read", userController.messageRead);
 router.post("/user/contact", userController.createContact);
 router.post("/user/reaction", userController.createReaction);
 router.post("/user/send-otp", userController.sendOtp);
-router.put("/user/profile", userController.updateProfile);
+router.put("/user/profile", authMiddleware, userController.updateProfile);
 router.put("/user/message/:messageId", userController.updateMessage);
 router.put("/user/email", userController.updateEmail);
 router.delete("/user", userController.deleteUser);
