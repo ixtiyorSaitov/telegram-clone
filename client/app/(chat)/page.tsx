@@ -19,6 +19,7 @@ import { IError, IUser } from "@/types";
 import { useLoading } from "@/hooks/use-loading";
 import { toast } from "sonner";
 import { io } from "socket.io-client";
+import { useAuth } from "@/hooks/use-auth";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
@@ -26,6 +27,7 @@ const HomePage = () => {
   const { setCreating, setLoading, isLoading } = useLoading();
   const { currentContact } = useCurrentContact();
   const { data: session } = useSession();
+  const { setOnlineUsers } = useAuth();
 
   const router = useRouter();
   const socket = useRef<ReturnType<typeof io> | null>(null);
@@ -65,6 +67,13 @@ const HomePage = () => {
 
   useEffect(() => {
     if (session?.currentUser?._id) {
+      socket.current?.emit("addOnlineUser", session.currentUser);
+      socket.current?.on(
+        "getOnlineUsers",
+        (data: { socketId: string; user: IUser }[]) => {
+          setOnlineUsers(data.map((item) => item.user));
+        }
+      );
       getContacts();
     }
   }, [session?.currentUser]);
