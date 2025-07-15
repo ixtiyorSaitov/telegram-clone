@@ -16,8 +16,7 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { axiosClient } from "@/http/axios";
-import { IError, IUser } from "@/types";
-import { signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { generateToken } from "@/lib/generate-token";
 
@@ -45,15 +44,6 @@ const InformationForm = () => {
     onSuccess: () => {
       toast.success("Profile updated successfully");
       update();
-    },
-    onError: (error: IError) => {
-      if (error.response?.data?.message) {
-        return toast.error("Error", {
-          description: error.response.data.message,
-        });
-      }
-
-      return toast.error("Error", { description: "Something went wrong" });
     },
   });
 

@@ -17,14 +17,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { axiosClient } from "@/http/axios";
 import { otpSchema } from "@/lib/validation";
-import { IError, IUser } from "@/types";
+import { IUser } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
-import { signIn } from 'next-auth/react'
+import { signIn } from "next-auth/react";
 
 const Verify = () => {
   const { email } = useAuth();
@@ -49,16 +49,8 @@ const Verify = () => {
       return data;
     },
     onSuccess: ({ user }) => {
-      signIn('credentials', { email: user.email, callbackUrl: '/' })
-      toast.success('Success', { description: "Successfuly verified" })
-    },
-    onError: (error: IError) => {
-      if (error.response?.data?.message) {
-        return toast.error("Error", {
-          description: error.response.data.message,
-        });
-      }
-      return toast.error("Error", { description: "Something went wrong" });
+      signIn("credentials", { email: user.email, callbackUrl: "/" });
+      toast.success("Success", { description: "Successfuly verified" });
     },
   });
 

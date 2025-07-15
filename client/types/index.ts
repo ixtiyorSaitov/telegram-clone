@@ -7,12 +7,12 @@ export interface IUser {
   bio: string;
   isVerified: boolean;
   muted: boolean;
-  notificationSound:  string;
+  notificationSound: string;
   sendingSound: string;
-  contacts: IUser[]
+  contacts: IUser[];
 }
 
-export interface IError {
+export interface IError extends Error {
   response: { data: { message: string } };
 }
 
