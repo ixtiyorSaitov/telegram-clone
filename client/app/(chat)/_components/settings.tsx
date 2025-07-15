@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -26,6 +26,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { axiosClient } from "@/http/axios";
 import { generateToken } from "@/lib/generate-token";
+import { UploadButton, UploadDropzone } from "@/lib/uploadthing";
 import { useMutation } from "@tanstack/react-query";
 import {
   LogIn,
@@ -48,19 +49,15 @@ const Settings = () => {
   const { data: session, update } = useSession();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (muted: boolean) => {
+    mutationFn: async (payload: IPayload) => {
       const token = await generateToken(session?.currentUser?._id);
-      const { data } = await axiosClient.put(
-        "/api/user/profile",
-        { muted },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await axiosClient.put("/api/user/profile", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       return data;
     },
     onSuccess: () => {
-      toast("Notification updated");
+      toast("Updated successfully");
       update();
     },
   });
@@ -103,7 +100,9 @@ const Settings = () => {
               </div>
               <Switch
                 checked={session?.currentUser?.muted}
-                onCheckedChange={() => mutate(!session?.currentUser?.muted)}
+                onCheckedChange={() =>
+                  mutate({ muted: !session?.currentUser?.muted })
+                }
                 disabled={isPending}
               />
             </div>
@@ -154,13 +153,28 @@ const Settings = () => {
 
           <div className="mx-auto w-1/2 h-36 relative">
             <Avatar className="w-full h-36">
+              <AvatarImage
+                src={session?.currentUser.avatar}
+                alt={session?.currentUser.email}
+                className="object-cover"
+              />
               <AvatarFallback className="text-6xl uppercase font-spaceGrotesk">
                 IS
               </AvatarFallback>
             </Avatar>
-            <Button size={"icon"} className="absolute right-0 bottom-0">
-              <Upload size={16} />
-            </Button>
+            <UploadButton
+              endpoint={"imageUploader"}
+              onClientUploadComplete={(res) => {
+                mutate({ avatar: res[0].url });
+              }}
+              config={{ appendOnPaste: true, mode: "auto" }}
+              className="absolute bottom-0 right-0"
+              appearance={{
+                allowedContent: { display: "none" },
+                button: { width: 40, height: 40, borderRadius: "100%" },
+              }}
+              content={{ button: <Upload size={16} /> }}
+            />
           </div>
 
           <Accordion type="single" collapsible className="mt-4">
@@ -207,3 +221,8 @@ const Settings = () => {
 };
 
 export default Settings;
+
+interface IPayload {
+  muted?: boolean;
+  avatar?: string;
+}

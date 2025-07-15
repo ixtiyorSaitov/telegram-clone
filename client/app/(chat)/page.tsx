@@ -1,47 +1,44 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import ContactList from "./_components/contact-list";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AddContact from "./_components/add-contact";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useForm } from "react-hook-form";
-import z from "zod";
+import { z } from "zod";
 import { emailSchema, messageSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TopChat from "./_components/top-chat";
 import Chat from "./_components/chat";
-import { useLoading } from "@/hooks/use-loading";
 import { axiosClient } from "@/http/axios";
 import { useSession } from "next-auth/react";
 import { generateToken } from "@/lib/generate-token";
 import { IError, IUser } from "@/types";
+import { useLoading } from "@/hooks/use-loading";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
-  const { setIsCreating, setIsLoading, isLoading } = useLoading();
+
+  const { setCreating, setLoading, isLoading } = useLoading();
   const { currentContact } = useCurrentContact();
   const { data: session } = useSession();
   const router = useRouter();
 
   const contactForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
-    defaultValues: {
-      email: "",
-    },
+    defaultValues: { email: "" },
   });
+
   const messageForm = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
-    defaultValues: {
-      text: "",
-      image: "",
-    },
+    defaultValues: { text: "", image: "" },
   });
 
   const getContacts = async () => {
-    setIsLoading(true);
+    setLoading(true);
     const token = await generateToken(session?.currentUser?._id);
     try {
       const { data } = await axiosClient.get<{ contacts: IUser[] }>(
@@ -51,12 +48,10 @@ const HomePage = () => {
         }
       );
       setContacts(data.contacts);
-    } catch (error) {
-      console.log(error);
-
-      toast.error("Error fetching contacts");
+    } catch {
+      toast.error("Cannot fetch contacts");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -71,36 +66,37 @@ const HomePage = () => {
   }, [session?.currentUser]);
 
   const onCreateContact = async (values: z.infer<typeof emailSchema>) => {
-    setIsCreating(true);
+    setCreating(true);
     const token = await generateToken(session?.currentUser?._id);
     try {
       const { data } = await axiosClient.post<{ contact: IUser }>(
         "/api/user/contact",
         values,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setContacts((prev) => [...prev, data.contact]);
-      toast.success("Contact added successfully");
+      toast("Contact added successfully");
+      contactForm.reset();
     } catch (error: unknown) {
       if ((error as IError).response?.data?.message) {
-        return toast.error("Error", {
-          description: (error as IError).response.data.message,
-        });
+        return toast.error((error as IError).response.data.message);
       }
-      return toast.error("Error", { description: "Something went wrong" });
+      return toast.error("Something went wron");
     } finally {
-      setIsCreating(false);
+      setCreating(false);
     }
   };
 
   const onSendMessage = (values: z.infer<typeof messageSchema>) => {
-    setIsCreating(true);
+    // API call to send message
+    console.log(values);
   };
 
   return (
     <>
       {/* Sidebar */}
-
       <div className="w-80 h-screen border-r fixed inset-0 z-50">
         {/* Loading */}
         {isLoading && (
@@ -109,25 +105,25 @@ const HomePage = () => {
           </div>
         )}
 
-        <ContactList contacts={contacts} />
+        {/* Contact list */}
+        {!isLoading && <ContactList contacts={contacts} />}
       </div>
-
       {/* Chat area */}
       <div className="pl-80 w-full">
         {/* Add contact */}
-        {!currentContact && (
+        {!currentContact?._id && (
           <AddContact
             contactForm={contactForm}
             onCreateContact={onCreateContact}
           />
         )}
-        {/* Chat */}
 
-        {currentContact && (
+        {/* Chat */}
+        {currentContact?._id && (
           <div className="w-full relative">
-            {/* Top chat */}
+            {/*Top Chat  */}
             <TopChat />
-            {/* Chat message */}
+            {/* Chat messages */}
             <Chat messageForm={messageForm} onSendMessage={onSendMessage} />
           </div>
         )}
