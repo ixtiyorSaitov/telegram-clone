@@ -218,7 +218,7 @@ class UserController {
   // [DELETE] /api/user
   async deleteUser(req, res, next) {
     try {
-      const userId = "6874883189a5014802fe62f1";
+      const userId = req.user._id;
       await userModel.findByIdAndDelete(userId);
       res.status(200).json({ message: "User deleted successfully" });
     } catch (error) {

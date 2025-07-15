@@ -22,15 +22,36 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import { useMutation } from "@tanstack/react-query";
+import { generateToken } from "@/lib/generate-token";
+import { signOut, useSession } from "next-auth/react";
+import { axiosClient } from "@/http/axios";
 
 const DangerZoneForm = () => {
+  const { data: session } = useSession();
+
   const form = useForm<z.infer<typeof confirmTextSchema>>({
     resolver: zodResolver(confirmTextSchema),
     defaultValues: { confirmText: "" },
   });
 
-  function onSubmit(values: z.infer<typeof confirmTextSchema>) {
-    console.log(values);
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      const token = await generateToken(session?.currentUser._id);
+      console.log(token);
+
+      const { data } = await axiosClient.delete("/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return data;
+    },
+    onSuccess: () => {
+      signOut();
+    },
+  });
+
+  function onSubmit() {
+    mutate();
   }
   return (
     <>
@@ -69,13 +90,19 @@ const DangerZoneForm = () => {
                       confirm.
                     </FormDescription>
                     <FormControl>
-                      <Input className="bg-secondary" {...field} />
+                      <Input
+                        disabled={isPending}
+                        className="bg-secondary"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-xs text-red-500" />
                   </FormItem>
                 )}
               />
-              <Button className="w-full font-bold">Submit</Button>
+              <Button disabled={isPending} className="w-full font-bold">
+                Submit
+              </Button>
             </form>
           </Form>
         </DialogContent>
