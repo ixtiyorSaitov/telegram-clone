@@ -18,7 +18,55 @@ Here're some of the project's best features:
 *   Image uploads and user profile configuration
 *   Real-time one-to-one messaging with notification and sending sounds
 
-  
+<h2>🛠️ Installation Steps:</h2>
+
+<p>1. Make sure Git and NodeJS is installed.</p>
+
+<p>2. Clone this repository to your local computer.</p>
+
+<p>3. Create .env.local file in client directory.</p>
+
+```
+#.env.local
+
+# public app url
+NEXT_PUBLIC_SERVER_URL=http://localhost:4000
+
+# jwt secret
+NEXT_PUBLIC_JWT_SECRET=your_jwt_secret_here
+
+# auth secret
+NEXT_AUTH_SECRET=your_next_auth_secret_here
+
+# mongodb uri
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/telegram-clone
+
+# uploadthing token
+UPLOADTHING_TOKEN=your_upload_thing_token_here
+```
+
+<p>3. Create .env file in server directory.</p>
+
+```
+#.env
+
+# application port
+PORT = 4000
+
+# mongodb uri
+# MONGO_URI = mongodb+srv://<username>:<password>@cluster0.mongodb.net/telegram-clone
+
+# application client url
+CLIENT_URL = http://localhost:3000
+
+# SMTP settings
+SMTP_PASS = your_smtp_password
+SMTP_USER = your_smtp_user_gmail
+SMTP_HOST = your_smtp_host
+SMTP_PORT = your_smtp_port
+
+JWT_SECRET = your_jwt_secret_here
+```
   
 <h2>💻 Built with</h2>
 
