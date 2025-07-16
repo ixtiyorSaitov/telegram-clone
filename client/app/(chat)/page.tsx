@@ -90,6 +90,10 @@ const HomePage = () => {
         }
       );
       setContacts((prev) => [...prev, data.contact]);
+      socket.current?.emit("createContact", {
+        currentUser: session?.currentUser,
+        receiver: data.contact,
+      });
       toast("Contact added successfully");
       contactForm.reset();
     } catch (error: unknown) {
