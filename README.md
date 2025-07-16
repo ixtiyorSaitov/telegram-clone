@@ -45,7 +45,26 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/telegram-clon
 UPLOADTHING_TOKEN=your_upload_thing_token_here
 ```
 
-<p>3. Create .env file in server directory.</p>
+<p>4. Enter your client file </p>
+
+```
+cd client
+```
+
+<p>5. Install node modules </p>
+
+```
+npm install
+```
+
+<p>6. Run client </p>
+
+```
+npm run dev
+```
+
+
+<p>7. Create .env file in server directory.</p>
 
 ```
 #.env
@@ -66,6 +85,42 @@ SMTP_HOST = your_smtp_host
 SMTP_PORT = your_smtp_port
 
 JWT_SECRET = your_jwt_secret_here
+```
+
+<p>8. Enter your server file </p>
+
+```
+cd server
+```
+
+<p>9. Install node modules </p>
+
+```
+npm install
+```
+
+<p>10. Run server </p>
+
+```
+npm run server
+```
+
+<p>11. Enter your socket file </p>
+
+```
+cd socket
+```
+
+<p>9. Install node modules </p>
+
+```
+npm install
+```
+
+<p>10. Run socket </p>
+
+```
+npm run socket
 ```
   
 <h2>💻 Built with</h2>
