@@ -6,7 +6,7 @@ import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, sliceText } from "@/lib/utils";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -64,7 +64,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
             </h2>
             <p className="text-xs line-clamp-1 text-muted-foreground">
               {contact.lastMessage
-                ? contact.lastMessage.text
+                ? sliceText(contact.lastMessage.text, 25)
                 : "No message yet"}
             </p>
           </div>
