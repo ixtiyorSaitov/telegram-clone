@@ -1,9 +1,11 @@
+import MessageCard from "@/components/cards/message.card";
+import ChatLoading from "@/components/loadings/chat.loading";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { messageSchema } from "@/lib/validation";
 import { Paperclip, Send, Smile } from "lucide-react";
-import { FC, useRef } from "react";
+import { FC, useEffect, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import emojies from "@emoji-mart/data";
@@ -15,19 +17,30 @@ import {
 } from "@/components/ui/popover";
 import { useTheme } from "next-themes";
 import { useLoading } from "@/hooks/use-loading";
-import ChatLoading from "@/components/loadings/chat.loading";
 import { IMessage } from "@/types";
-import MessageCard from "@/components/cards/message.card";
 
 interface Props {
-  onSendMessage: (values: z.infer<typeof messageSchema>) => void;
+  onSendMessage: (values: z.infer<typeof messageSchema>) => Promise<void>;
+  onReadMessages: () => Promise<void>;
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
   messages: IMessage[];
 }
-const Chat: FC<Props> = ({ onSendMessage, messageForm, messages }) => {
+const Chat: FC<Props> = ({
+  onSendMessage,
+  messageForm,
+  messages,
+  onReadMessages,
+}) => {
   const { loadMessages } = useLoading();
+
   const { resolvedTheme } = useTheme();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const scrollRef = useRef<HTMLFormElement | null>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    onReadMessages();
+  }, [messages]);
 
   const handleEmojiSelect = (emoji: string) => {
     const input = inputRef.current;
@@ -49,11 +62,10 @@ const Chat: FC<Props> = ({ onSendMessage, messageForm, messages }) => {
     <div className="flex flex-col justify-end z-40 min-h-[92vh]">
       {/* Loading */}
       {loadMessages && <ChatLoading />}
-      {/* <ChatLoading /> */}
 
       {/* Messages */}
       {messages.map((message, index) => (
-        <MessageCard message={message} key={index} />
+        <MessageCard key={index} message={message} />
       ))}
 
       {/* Start conversation */}
@@ -73,6 +85,7 @@ const Chat: FC<Props> = ({ onSendMessage, messageForm, messages }) => {
         <form
           onSubmit={messageForm.handleSubmit(onSendMessage)}
           className="w-full flex relative"
+          ref={scrollRef}
         >
           <Button size={"icon"} type="button" variant={"secondary"}>
             <Paperclip />

@@ -1,7 +1,7 @@
 "use client";
 
-import { IUser } from "@/types";
-import { FC, useState } from "react";
+import { IUser, STATUS } from "@/types";
+import React, { FC, useState } from "react";
 import Settings from "./settings";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,11 +9,11 @@ import { useRouter } from "next/navigation";
 import { cn, sliceText } from "@/lib/utils";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useAuth } from "@/hooks/use-auth";
+import { format } from "date-fns";
 
 interface Props {
   contacts: IUser[];
 }
-
 const ContactList: FC<Props> = ({ contacts }) => {
   const [query, setQuery] = useState("");
 
@@ -22,21 +22,20 @@ const ContactList: FC<Props> = ({ contacts }) => {
   const { setCurrentContact, currentContact } = useCurrentContact();
 
   const filteredContacts = contacts.filter((contact) =>
-    contact.email.toLocaleLowerCase().includes(query.toLocaleLowerCase())
+    contact.email.toLowerCase().includes(query.toLowerCase())
   );
-  console.log(filteredContacts);
 
-  const renderContacts = (contact: IUser) => {
+  const renderContact = (contact: IUser) => {
     const onChat = () => {
       if (currentContact?._id === contact._id) return;
       setCurrentContact(contact);
       router.push(`/?chat=${contact._id}`);
     };
+
     return (
       <div
-        key={contact._id}
         className={cn(
-          "flex justify-between items-center cursor-pointer hove  r:bg-secondary/50 p-2",
+          "flex justify-between items-center cursor-pointer hover:bg-secondary/50 p-2",
           currentContact?._id === contact._id && "bg-secondary/50"
         )}
         onClick={onChat}
@@ -54,7 +53,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
               </AvatarFallback>
             </Avatar>
             {onlineUsers.some((user) => user._id === contact._id) && (
-              <div className="size-2 bg-green-500 absolute rounded-full bottom-0 right-0 !z-50" />
+              <div className="size-3 bg-green-500 absolute rounded-full bottom-0 right-0 !z-50" />
             )}
           </div>
 
@@ -62,17 +61,29 @@ const ContactList: FC<Props> = ({ contacts }) => {
             <h2 className="capitalize line-clamp-1 text-sm">
               {contact.email.split("@")[0]}
             </h2>
-            <p className="text-xs line-clamp-1 text-muted-foreground">
+            <p
+              className={cn(
+                "text-xs line-clamp-1",
+                contact.lastMessage
+                  ? contact.lastMessage.status !== STATUS.READ
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                  : "text-muted-foreground"
+              )}
+            >
               {contact.lastMessage
                 ? sliceText(contact.lastMessage.text, 25)
-                : "No message yet"}
+                : "No messages yet"}
             </p>
           </div>
         </div>
-
-        <div className="self-end">
-          <p className="text-xs text-muted-foreground">19:20 pm</p>
-        </div>
+        {contact.lastMessage && (
+          <div className="self-end">
+            <p className="text-xs text-muted-foreground">
+              {format(contact.lastMessage.updatedAt, "hh:mm a")}
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -84,9 +95,9 @@ const ContactList: FC<Props> = ({ contacts }) => {
         <Settings />
         <div className="m-2 w-full">
           <Input
+            className="bg-secondary"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="bg-secondary"
             type="text"
             placeholder="Search..."
           />
@@ -95,10 +106,12 @@ const ContactList: FC<Props> = ({ contacts }) => {
 
       {filteredContacts.length === 0 ? (
         <div className="w-full h-[95vh] flex justify-center items-center text-center text-muted-foreground">
-          <p>Contacts list is empty</p>
+          <p>Contact list is empty</p>
         </div>
       ) : (
-        filteredContacts.map((contact) => renderContacts(contact))
+        filteredContacts.map((contact) => (
+          <div key={contact._id}>{renderContact(contact)}</div>
+        ))
       )}
     </>
   );

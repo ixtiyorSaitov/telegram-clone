@@ -28,6 +28,13 @@ export interface IMessage {
   reaction: string;
   sender: IUser;
   receiver: IUser;
+  status: STATUS;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum STATUS {
+  READ = "read",
+  DELIVERED = "delivered",
+  SENT = "sent",
 }

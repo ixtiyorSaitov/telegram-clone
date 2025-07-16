@@ -1,8 +1,5 @@
 const io = require("socket.io")(5000, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
 let users = []; // {user, socketId}
@@ -20,35 +17,38 @@ const getSocketId = (userId) => {
 };
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("User connected", socket.id);
 
   socket.on("addOnlineUser", (user) => {
-    console.log("User added:", user);
     addOnlineUser(user, socket.id);
     io.emit("getOnlineUsers", users);
   });
 
   socket.on("createContact", ({ currentUser, receiver }) => {
     const receiverSocketId = getSocketId(receiver._id);
-    console.log("receiverSocketId", receiverSocketId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("getCreatedUser", currentUser);
+      socket.to(receiverSocketId).emit("getCreatedUser", currentUser);
     }
   });
 
-  socket.on("sendMessage", ({ sender, receiver, newMessage }) => {
+  socket.on("sendMessage", ({ newMessage, receiver, sender }) => {
     const receiverSocketId = getSocketId(receiver._id);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("getNewMessage", {
-        sender,
-        newMessage,
-        receiver,
-      });
+      socket
+        .to(receiverSocketId)
+        .emit("getNewMessage", { newMessage, sender, receiver });
+    }
+  });
+
+  socket.on("readMessages", ({ receiver, messages }) => {
+    const receiverSocketId = getSocketId(receiver._id);
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit("getReadMessages", messages);
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("User disconnected", socket.id);
     users = users.filter((u) => u.socketId !== socket.id);
     io.emit("getOnlineUsers", users);
   });

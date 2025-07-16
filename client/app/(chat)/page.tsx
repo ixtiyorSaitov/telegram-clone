@@ -1,26 +1,26 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import ContactList from "./_components/contact-list";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import AddContact from "./_components/add-contact";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { emailSchema, messageSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import TopChat from "./_components/top-chat";
-import Chat from "./_components/chat";
 import { useLoading } from "@/hooks/use-loading";
 import { axiosClient } from "@/http/axios";
 import { useSession } from "next-auth/react";
 import { generateToken } from "@/lib/generate-token";
-import { IError, IMessage, IUser } from "@/types";
+import { IError, IMessage, IUser, STATUS } from "@/types";
 import { io } from "socket.io-client";
 import { useAuth } from "@/hooks/use-auth";
 import useAudio from "@/hooks/use-audio";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import Chat from "./_components/chat";
+import ContactList from "./_components/contact-list";
+import AddContact from "./_components/add-contact";
+import TopChat from "./_components/top-chat";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
@@ -33,7 +33,10 @@ const HomePage = () => {
   const { playSound } = useAudio();
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const socket = useRef<ReturnType<typeof io> | null>(null);
+
+  const CONTACT_ID = searchParams.get("chat");
 
   const contactForm = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -74,6 +77,18 @@ const HomePage = () => {
         }
       );
       setMessages(data.messages);
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage: item.lastMessage
+                  ? { ...item.lastMessage, status: STATUS.READ }
+                  : null,
+              }
+            : item
+        )
+      );
     } catch {
       toast.error("Cannot fetch messages");
     } finally {
@@ -115,21 +130,40 @@ const HomePage = () => {
             const isExist = prev.some((item) => item._id === newMessage._id);
             return isExist ? prev : [...prev, newMessage];
           });
-          setContacts((prev) =>
-            prev.map((item) =>
-              item._id === sender._id
-                ? { ...item, lastMessage: newMessage }
-                : item
-            )
-          );
+          setContacts((prev) => {
+            return prev.map((contact) => {
+              if (contact._id === sender._id) {
+                return {
+                  ...contact,
+                  lastMessage: {
+                    ...newMessage,
+                    status:
+                      CONTACT_ID === sender._id
+                        ? STATUS.READ
+                        : newMessage.status,
+                  },
+                };
+              }
+              return contact;
+            });
+          });
           toast("New message");
           if (!receiver.muted) {
             playSound(receiver.notificationSound);
           }
         }
       );
+
+      socket.current?.on("getReadMessages", (messages: IMessage[]) => {
+        setMessages((prev) => {
+          return prev.map((item) => {
+            const message = messages.find((msg) => msg._id === item._id);
+            return message ? { ...item, status: STATUS.READ } : item;
+          });
+        });
+      });
     }
-  }, [session?.currentUser, socket]);
+  }, [session?.currentUser, socket, CONTACT_ID]);
 
   useEffect(() => {
     if (currentContact?._id) {
@@ -153,9 +187,9 @@ const HomePage = () => {
         currentUser: session?.currentUser,
         receiver: data.contact,
       });
-      toast.error("Contact added successfully");
+      toast.success("Contact added successfully");
       contactForm.reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if ((error as IError).response?.data?.message) {
         return toast.error((error as IError).response.data.message);
       }
@@ -178,7 +212,10 @@ const HomePage = () => {
       setContacts((prev) =>
         prev.map((item) =>
           item._id === currentContact?._id
-            ? { ...item, lastMessage: data.newMessage }
+            ? {
+                ...item,
+                lastMessage: { ...data.newMessage, status: STATUS.READ },
+              }
             : item
         )
       );
@@ -195,23 +232,46 @@ const HomePage = () => {
     }
   };
 
+  const onReadMessages = async () => {
+    const receivedMessages = messages
+      .filter((message) => message.receiver._id === session?.currentUser?._id)
+      .filter((message) => message.status !== STATUS.READ);
+
+    if (receivedMessages.length === 0) return;
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ messages: IMessage[] }>(
+        "/api/user/message-read",
+        { messages: receivedMessages },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      socket.current?.emit("readMessages", {
+        messages: data.messages,
+        receiver: currentContact,
+      });
+      setMessages((prev) => {
+        return prev.map((item) => {
+          const message = data.messages.find((msg) => msg._id === item._id);
+          return message ? { ...item, status: STATUS.READ } : item;
+        });
+      });
+    } catch {
+      toast.error("Cannot read messages");
+    }
+  };
+
   return (
     <>
-      {/* Sidebar */}
       <div className="w-80 h-screen border-r fixed inset-0 z-50">
-        {/* Loading */}
         {isLoading && (
           <div className="w-full h-[95vh] flex justify-center items-center">
             <Loader2 size={50} className="animate-spin" />
           </div>
         )}
 
-        {/* Contact list */}
         {!isLoading && <ContactList contacts={contacts} />}
       </div>
-      {/* Chat area */}
       <div className="pl-80 w-full">
-        {/* Add contact */}
         {!currentContact?._id && (
           <AddContact
             contactForm={contactForm}
@@ -219,16 +279,14 @@ const HomePage = () => {
           />
         )}
 
-        {/* Chat */}
         {currentContact?._id && (
           <div className="w-full relative">
-            {/*Top Chat  */}
             <TopChat />
-            {/* Chat messages */}
             <Chat
               messageForm={messageForm}
               onSendMessage={onSendMessage}
               messages={messages}
+              onReadMessages={onReadMessages}
             />
           </div>
         )}
