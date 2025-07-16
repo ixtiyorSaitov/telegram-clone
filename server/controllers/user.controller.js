@@ -11,22 +11,27 @@ class UserController {
       const userId = req.user._id;
 
       const contacts = await userModel.findById(userId).populate("contacts");
-      const allContacts = contacts.contacts;
+      const allContacts = contacts.contacts.map((contact) =>
+        contact.toObject()
+      );
 
-      for (const contact of allContacts) {
-        const lastMessage = await messageModel
-          .findOne({
-            $or: [
-              { sender: userId, receiver: contact._id },
-              { sender: contact._id, receiver: userId },
-            ],
-          })
-          .populate({ path: "sender" })
-          .populate({ path: "receiver" })
-          .sort({ createdAt: -1 });
+      // Har bir kontakt uchun eng so‘nggi xabarni topish
+      await Promise.all(
+        allContacts.map(async (contact) => {
+          const lastMessage = await messageModel
+            .findOne({
+              $or: [
+                { sender: userId, receiver: contact._id },
+                { sender: contact._id, receiver: userId },
+              ],
+            })
+            .sort({ createdAt: -1 }) // so‘nggi xabar
+            .populate("sender")
+            .populate("receiver");
 
-        contact.lastMessage = lastMessage;
-      }
+          contact.lastMessage = lastMessage || null;
+        })
+      );
 
       return res.status(200).json({ contacts: allContacts });
     } catch (error) {

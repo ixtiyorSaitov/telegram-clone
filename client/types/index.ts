@@ -8,6 +8,7 @@ export interface IUser {
   isVerified: boolean;
   muted: boolean;
   notificationSound: string;
+  lastMessage: IMessage;
   sendingSound: string;
   contacts: IUser[];
 }

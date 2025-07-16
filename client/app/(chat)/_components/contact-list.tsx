@@ -24,6 +24,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
   const filteredContacts = contacts.filter((contact) =>
     contact.email.toLocaleLowerCase().includes(query.toLocaleLowerCase())
   );
+  console.log(filteredContacts);
 
   const renderContacts = (contact: IUser) => {
     const onChat = () => {
@@ -35,7 +36,7 @@ const ContactList: FC<Props> = ({ contacts }) => {
       <div
         key={contact._id}
         className={cn(
-          "flex justify-between items-center cursor-pointer hover:bg-secondary/50 p-2",
+          "flex justify-between items-center cursor-pointer hove  r:bg-secondary/50 p-2",
           currentContact?._id === contact._id && "bg-secondary/50"
         )}
         onClick={onChat}
@@ -62,7 +63,9 @@ const ContactList: FC<Props> = ({ contacts }) => {
               {contact.email.split("@")[0]}
             </h2>
             <p className="text-xs line-clamp-1 text-muted-foreground">
-              No message yet
+              {contact.lastMessage
+                ? contact.lastMessage.text
+                : "No message yet"}
             </p>
           </div>
         </div>
