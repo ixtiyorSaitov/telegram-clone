@@ -32,7 +32,18 @@ io.on("connection", (socket) => {
     const receiverSocketId = getSocketId(receiver._id);
     console.log("receiverSocketId", receiverSocketId);
     if (receiverSocketId) {
-      io.to(receiverSocketId.socketId).emit("getCreatedUser", currentUser);
+      io.to(receiverSocketId).emit("getCreatedUser", currentUser);
+    }
+  });
+
+  socket.on("sendMessage", ({ sender, receiver, newMessage }) => {
+    const receiverSocketId = getSocketId(receiver._id);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("getNewMessage", {
+        sender,
+        newMessage,
+        receiver,
+      });
     }
   });
 
