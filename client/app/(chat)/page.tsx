@@ -15,7 +15,7 @@ import Chat from "./_components/chat";
 import { axiosClient } from "@/http/axios";
 import { useSession } from "next-auth/react";
 import { generateToken } from "@/lib/generate-token";
-import { IError, IUser } from "@/types";
+import { IError, IMessage, IUser } from "@/types";
 import { useLoading } from "@/hooks/use-loading";
 import { toast } from "sonner";
 import { io } from "socket.io-client";
@@ -23,8 +23,9 @@ import { useAuth } from "@/hooks/use-auth";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
+  const [messages, setMessages] = useState<IMessage[]>([]);
 
-  const { setCreating, setLoading, isLoading } = useLoading();
+  const { setCreating, setLoading, isLoading, setLoadMessages } = useLoading();
   const { currentContact } = useCurrentContact();
   const { data: session } = useSession();
   const { setOnlineUsers } = useAuth();
@@ -60,6 +61,24 @@ const HomePage = () => {
     }
   };
 
+  const getMessages = async () => {
+    setLoadMessages(true);
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.get<{ messages: IMessage[] }>(
+        `/api/user/messages/${currentContact?._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMessages(data.messages);
+    } catch {
+      toast.error("Cannot fetch messages");
+    } finally {
+      setLoadMessages(false);
+    }
+  };
+
   useEffect(() => {
     router.replace("/");
     socket.current = io("ws://localhost:5000");
@@ -89,7 +108,13 @@ const HomePage = () => {
     }
   }, [session?.currentUser, socket]);
 
-  const onCreateContact = async (values: z.infer<typeof  emailSchema>) => {
+  useEffect(() => {
+    if (currentContact?._id) {
+      getMessages();
+    }
+  }, [currentContact]);
+
+  const onCreateContact = async (values: z.infer<typeof emailSchema>) => {
     setCreating(true);
     const token = await generateToken(session?.currentUser?._id);
     try {
@@ -117,8 +142,27 @@ const HomePage = () => {
     }
   };
 
-  const onSendMessage = (values: z.infer<typeof messageSchema>) => {
+  const onSendMessage = async (values: z.infer<typeof messageSchema>) => {
     // API call to send message
+    setCreating(true);
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ newMessage: IMessage }>(
+        "/api/user/message",
+        {
+          ...values,
+          receiver: currentContact?._id,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMessages(prev => [...prev, data.newMessage])
+    } catch {
+      toast.error("Cannot send message");
+    } finally {
+      setCreating(false);
+    }
     console.log(values);
   };
 
@@ -152,7 +196,11 @@ const HomePage = () => {
             {/*Top Chat  */}
             <TopChat />
             {/* Chat messages */}
-            <Chat messageForm={messageForm} onSendMessage={onSendMessage} />
+            <Chat
+              messages={messages}
+              messageForm={messageForm}
+              onSendMessage={onSendMessage}
+            />
           </div>
         )}
       </div>

@@ -19,3 +19,14 @@ export interface IError extends Error {
 export interface ChildProps {
   children: React.ReactNode;
 }
+
+export interface IMessage {
+  _id: string;
+  text: string;
+  image: string;
+  reaction: string;
+  sender: IUser;
+  receiver: IUser;
+  createdAt: string;
+  updatedAt: string;
+}
