@@ -12,14 +12,15 @@ import { emailSchema, messageSchema } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TopChat from "./_components/top-chat";
 import Chat from "./_components/chat";
+import { useLoading } from "@/hooks/use-loading";
 import { axiosClient } from "@/http/axios";
 import { useSession } from "next-auth/react";
 import { generateToken } from "@/lib/generate-token";
 import { IError, IMessage, IUser } from "@/types";
-import { useLoading } from "@/hooks/use-loading";
-import { toast } from "sonner";
 import { io } from "socket.io-client";
 import { useAuth } from "@/hooks/use-auth";
+import useAudio from "@/hooks/use-audio";
+import { toast } from "sonner";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
@@ -29,6 +30,7 @@ const HomePage = () => {
   const { currentContact } = useCurrentContact();
   const { data: session } = useSession();
   const { setOnlineUsers } = useAuth();
+  const { playSound } = useAudio();
 
   const router = useRouter();
   const socket = useRef<ReturnType<typeof io> | null>(null);
@@ -105,6 +107,20 @@ const HomePage = () => {
           return isExist ? prev : [...prev, user];
         });
       });
+
+      socket.current?.on(
+        "getNewMessage",
+        ({ newMessage, sender, receiver }: GetSocketType) => {
+          setMessages((prev) => {
+            const isExist = prev.some((item) => item._id === newMessage._id);
+            return isExist ? prev : [...prev, newMessage];
+          });
+          toast("New message");
+          if (!receiver.muted) {
+            playSound(receiver.notificationSound);
+          }
+        }
+      );
     }
   }, [session?.currentUser, socket]);
 
@@ -130,40 +146,39 @@ const HomePage = () => {
         currentUser: session?.currentUser,
         receiver: data.contact,
       });
-      toast("Contact added successfully");
+      toast.error("Contact added successfully");
       contactForm.reset();
-    } catch (error: unknown) {
+    } catch (error: any) {
       if ((error as IError).response?.data?.message) {
         return toast.error((error as IError).response.data.message);
       }
-      return toast.error("Something went wron");
+      return toast.error("Something went wrong");
     } finally {
       setCreating(false);
     }
   };
 
   const onSendMessage = async (values: z.infer<typeof messageSchema>) => {
-    // API call to send message
     setCreating(true);
     const token = await generateToken(session?.currentUser?._id);
     try {
-      const { data } = await axiosClient.post<{ newMessage: IMessage }>(
+      const { data } = await axiosClient.post<GetSocketType>(
         "/api/user/message",
-        {
-          ...values,
-          receiver: currentContact?._id,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { ...values, receiver: currentContact?._id },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessages(prev => [...prev, data.newMessage])
+      setMessages((prev) => [...prev, data.newMessage]);
+      messageForm.reset();
+      socket.current?.emit("sendMessage", {
+        newMessage: data.newMessage,
+        receiver: data.receiver,
+        sender: data.sender,
+      });
     } catch {
       toast.error("Cannot send message");
     } finally {
       setCreating(false);
     }
-    console.log(values);
   };
 
   return (
@@ -197,9 +212,9 @@ const HomePage = () => {
             <TopChat />
             {/* Chat messages */}
             <Chat
-              messages={messages}
               messageForm={messageForm}
               onSendMessage={onSendMessage}
+              messages={messages}
             />
           </div>
         )}
@@ -209,3 +224,9 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+interface GetSocketType {
+  receiver: IUser;
+  sender: IUser;
+  newMessage: IMessage;
+}

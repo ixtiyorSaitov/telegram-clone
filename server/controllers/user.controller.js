@@ -68,22 +68,21 @@ class UserController {
   async createMessage(req, res, next) {
     try {
       const userId = req.user._id;
-      const newMessage = await messageModel.create({
+      const createdMessage = await messageModel.create({
         ...req.body,
         sender: userId,
       });
-      const currentMessage = await messageModel
-        .findById(newMessage._id)
+      const newMessage = await messageModel
+        .findById(createdMessage._id)
         .populate({
           path: "sender",
-          select: "email",
         })
         .populate({
           path: "receiver",
-          select: "email",
         });
-
-      res.status(201).json({ newMessage: currentMessage });
+      const receiver = await userModel.findById(createdMessage.receiver);
+      const sender = await userModel.findById(createdMessage.sender);
+      res.status(201).json({ newMessage, sender, receiver });
     } catch (error) {
       next(error);
     }
