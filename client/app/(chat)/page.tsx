@@ -77,6 +77,7 @@ const HomePage = () => {
         }
       );
       setMessages(data.messages);
+      // @ts-ignore
       setContacts((prev) =>
         prev.map((item) =>
           item._id === currentContact?._id
