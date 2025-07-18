@@ -17,6 +17,8 @@ interface Props {
 const MessageCard: FC<Props> = ({ message }) => {
   const { currentContact } = useCurrentContact();
 
+  const reactions = ["👍", "😂", "❤️", "😍", "👎"];
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
@@ -51,11 +53,21 @@ const MessageCard: FC<Props> = ({ message }) => {
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem>Profile</ContextMenuItem>
-        <ContextMenuItem>Billing</ContextMenuItem>
-        <ContextMenuItem>Team</ContextMenuItem>
-        <ContextMenuItem>Subscription</ContextMenuItem>
+      <ContextMenuContent className="w-56 p-0 mb-10">
+        <ContextMenuItem className="grid grid-cols-5">
+          {reactions.map((reaction) => (
+            <div
+              key={reaction}
+              className={cn(
+                "text-xl cursor-pointer p-1 hover:bg-primary/50 transition-all",
+                message.reaction === reaction && "bg-primary/50"
+              )}
+              // onClick={() => onReaction(reaction, message._id)}
+            >
+              {reaction}
+            </div>
+          ))}
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );
