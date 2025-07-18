@@ -51,8 +51,7 @@ const MessageCard: FC<Props> = ({ message }) => {
               </div>
             </div>
           </div>
-        </div>
-        
+        </div> 
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56 p-0 mb-10">
         <ContextMenuItem className="grid grid-cols-5">
