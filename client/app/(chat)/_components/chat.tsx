@@ -8,7 +8,6 @@ import { Paperclip, Send } from "lucide-react";
 import { ChangeEvent, FC, useEffect, useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { useTheme } from "next-themes";
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
 import { useCurrentContact } from "@/hooks/use-current";
@@ -46,7 +45,6 @@ const Chat: FC<Props> = ({
   const { editedMessage, setEditedMessage, currentContact } =
     useCurrentContact();
   const { data: session } = useSession();
-  const { resolvedTheme } = useTheme();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLFormElement | null>(null);
 
