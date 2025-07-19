@@ -4,17 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { messageSchema } from "@/lib/validation";
-import { Paperclip, Send, Smile } from "lucide-react";
+import { Paperclip, Send } from "lucide-react";
 import { ChangeEvent, FC, useEffect, useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import emojies from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useTheme } from "next-themes";
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
@@ -76,22 +69,6 @@ const Chat: FC<Props> = ({
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [editedMessage]);
-
-  const handleEmojiSelect = (emoji: string) => {
-    const input = inputRef.current;
-    if (!input) return;
-
-    const text = messageForm.getValues("text");
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
-
-    const newText = text.slice(0, start) + emoji + text.slice(end);
-    messageForm.setValue("text", newText);
-
-    setTimeout(() => {
-      input.setSelectionRange(start + emoji.length, start + emoji.length);
-    }, 0);
-  };
 
   return (
     <div className="flex flex-col justify-end z-40 min-h-[92vh] sidebar-custom-scrollbar overflow-y-scroll">
@@ -170,7 +147,7 @@ const Chat: FC<Props> = ({
               </FormItem>
             )}
           />
-          <Popover>
+          {/* <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" type="button" variant="secondary">
                 <Smile />
@@ -185,7 +162,7 @@ const Chat: FC<Props> = ({
                 }
               />
             </PopoverContent>
-          </Popover>
+          </Popover> */}
 
           <Button type="submit" size={"icon"}>
             <Send />
