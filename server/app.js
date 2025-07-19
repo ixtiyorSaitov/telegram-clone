@@ -1,36 +1,30 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const { default: mongoose } = require("mongoose");
-const errorMiddleware = require("./middlewares/error.middleware");
+require('dotenv').config()
 
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const { default: mongoose } = require('mongoose')
+const errorMiddleware = require('./middlewares/error.middleware')
 
-app.use(express.json());
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
-app.use(cookieParser());
+const app = express()
 
-app.use("/api", require("./routes/index"));
+// Middleware
+app.use(express.json())
+app.use(cors({ origin: process.env.CLIENT_URL, methods: ['GET', 'POST', 'PUT', 'DELETE'] }))
+app.use(cookieParser())
 
-app.use(errorMiddleware);
+app.use('/api', require('./routes/index'))
 
-const PORT = process.env.PORT || 6000;
+app.use(errorMiddleware)
 
 const bootstrap = async () => {
-  try {
-    mongoose
-      .connect(process.env.MONGO_URI)
-      .then(() => console.log("Connected to MongoDB"));
-    app.listen(PORT, () => console.log("Server is running on port 4000"));
-  } catch (error) {
-    console.error(error);
-  }
-};
+	try {
+		const PORT = process.env.PORT || 6000
+		mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected'))
+		app.listen(PORT, () => console.log(`Server is running on port ${PORT}`))
+	} catch (error) {
+		console.error(error)
+	}
+}
 
-bootstrap();
+bootstrap()

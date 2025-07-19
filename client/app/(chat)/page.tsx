@@ -1,7 +1,10 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+import ContactList from "./_components/contact-list";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import AddContact from "./_components/add-contact";
 import { useCurrentContact } from "@/hooks/use-current";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,23 +14,22 @@ import { useLoading } from "@/hooks/use-loading";
 import { axiosClient } from "@/http/axios";
 import { useSession } from "next-auth/react";
 import { generateToken } from "@/lib/generate-token";
-import { IError, IMessage, IUser, STATUS } from "@/types";
+import { IError, IMessage, IUser } from "@/types";
+import { toast } from "@/hooks/use-toast";
 import { io } from "socket.io-client";
 import { useAuth } from "@/hooks/use-auth";
 import useAudio from "@/hooks/use-audio";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import Chat from "./_components/chat";
-import ContactList from "./_components/contact-list";
-import AddContact from "./_components/add-contact";
+import { CONST } from "@/lib/constants";
 import TopChat from "./_components/top-chat";
+import Chat from "./_components/chat";
 
 const HomePage = () => {
   const [contacts, setContacts] = useState<IUser[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
 
   const { setCreating, setLoading, isLoading, setLoadMessages } = useLoading();
-  const { currentContact } = useCurrentContact();
+  const { currentContact, editedMessage, setEditedMessage } =
+    useCurrentContact();
   const { data: session } = useSession();
   const { setOnlineUsers } = useAuth();
   const { playSound } = useAudio();
@@ -60,7 +62,7 @@ const HomePage = () => {
       );
       setContacts(data.contacts);
     } catch {
-      toast.error("Cannot fetch contacts");
+      toast({ description: "Cannot fetch contacts", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -77,21 +79,20 @@ const HomePage = () => {
         }
       );
       setMessages(data.messages);
-      // @ts-ignore
       setContacts((prev) =>
         prev.map((item) =>
           item._id === currentContact?._id
             ? {
                 ...item,
                 lastMessage: item.lastMessage
-                  ? { ...item.lastMessage, status: STATUS.READ }
+                  ? { ...item.lastMessage, status: CONST.READ }
                   : null,
               }
             : item
         )
       );
     } catch {
-      toast.error("Cannot fetch messages");
+      toast({ description: "Cannot fetch messages", variant: "destructive" });
     } finally {
       setLoadMessages(false);
     }
@@ -140,7 +141,7 @@ const HomePage = () => {
                     ...newMessage,
                     status:
                       CONTACT_ID === sender._id
-                        ? STATUS.READ
+                        ? CONST.READ
                         : newMessage.status,
                   },
                 };
@@ -148,7 +149,10 @@ const HomePage = () => {
               return contact;
             });
           });
-          toast("New message");
+          toast({
+            title: "New message",
+            description: `${sender?.email.split("@")[0]} sent you a message`,
+          });
           if (!receiver.muted) {
             playSound(receiver.notificationSound);
           }
@@ -159,10 +163,65 @@ const HomePage = () => {
         setMessages((prev) => {
           return prev.map((item) => {
             const message = messages.find((msg) => msg._id === item._id);
-            return message ? { ...item, status: STATUS.READ } : item;
+            return message ? { ...item, status: CONST.READ } : item;
           });
         });
       });
+
+      socket.current?.on(
+        "getUpdatedMessage",
+        ({ updatedMessage, sender }: GetSocketType) => {
+          setMessages((prev) =>
+            prev.map((item) =>
+              item._id === updatedMessage._id
+                ? {
+                    ...item,
+                    reaction: updatedMessage.reaction,
+                    text: updatedMessage.text,
+                  }
+                : item
+            )
+          );
+          setContacts((prev) =>
+            prev.map((item) =>
+              item._id === sender._id
+                ? {
+                    ...item,
+                    lastMessage:
+                      item.lastMessage?._id === updatedMessage._id
+                        ? updatedMessage
+                        : item.lastMessage,
+                  }
+                : item
+            )
+          );
+        }
+      );
+
+      socket.current?.on(
+        "getDeletedMessage",
+        ({ deletedMessage, sender, filteredMessages }: GetSocketType) => {
+          setMessages((prev) =>
+            prev.filter((item) => item._id !== deletedMessage._id)
+          );
+          const lastMessage = filteredMessages.length
+            ? filteredMessages[filteredMessages.length - 1]
+            : null;
+          setContacts((prev) =>
+            prev.map((item) =>
+              item._id === sender._id
+                ? {
+                    ...item,
+                    lastMessage:
+                      item.lastMessage?._id === deletedMessage._id
+                        ? lastMessage
+                        : item.lastMessage,
+                  }
+                : item
+            )
+          );
+        }
+      );
     }
   }, [session?.currentUser, socket, CONTACT_ID]);
 
@@ -188,15 +247,30 @@ const HomePage = () => {
         currentUser: session?.currentUser,
         receiver: data.contact,
       });
-      toast.success("Contact added successfully");
+      toast({ description: "Contact added successfully" });
       contactForm.reset();
-    } catch (error: unknown) {
+    } catch (error: any) {
       if ((error as IError).response?.data?.message) {
-        return toast.error((error as IError).response.data.message);
+        return toast({
+          description: (error as IError).response.data.message,
+          variant: "destructive",
+        });
       }
-      return toast.error("Something went wrong");
+      return toast({
+        description: "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const onSubmitMessage = async (values: z.infer<typeof messageSchema>) => {
+    setCreating(true);
+    if (editedMessage?._id) {
+      onEditMessage(editedMessage._id, values.text);
+    } else {
+      onSendMessage(values);
     }
   };
 
@@ -215,7 +289,7 @@ const HomePage = () => {
           item._id === currentContact?._id
             ? {
                 ...item,
-                lastMessage: { ...data.newMessage, status: STATUS.READ },
+                lastMessage: { ...data.newMessage, status: CONST.READ },
               }
             : item
         )
@@ -227,16 +301,56 @@ const HomePage = () => {
         sender: data.sender,
       });
     } catch {
-      toast.error("Cannot send message");
+      toast({ description: "Cannot send message", variant: "destructive" });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const onEditMessage = async (messageId: string, text: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.put<{ updatedMessage: IMessage }>(
+        `/api/user/message/${messageId}`,
+        { text },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages((prev) =>
+        prev.map((item) =>
+          item._id === data.updatedMessage._id
+            ? { ...item, text: data.updatedMessage.text }
+            : item
+        )
+      );
+      socket.current?.emit("updateMessage", {
+        updatedMessage: data.updatedMessage,
+        receiver: currentContact,
+        sender: session?.currentUser,
+      });
+      messageForm.reset();
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage:
+                  item.lastMessage?._id === messageId
+                    ? data.updatedMessage
+                    : item.lastMessage,
+              }
+            : item
+        )
+      );
+      setEditedMessage(null);
+    } catch {
+      toast({ description: "Cannot edit message", variant: "destructive" });
     }
   };
 
   const onReadMessages = async () => {
     const receivedMessages = messages
       .filter((message) => message.receiver._id === session?.currentUser?._id)
-      .filter((message) => message.status !== STATUS.READ);
+      .filter((message) => message.status !== CONST.READ);
 
     if (receivedMessages.length === 0) return;
     const token = await generateToken(session?.currentUser?._id);
@@ -253,11 +367,76 @@ const HomePage = () => {
       setMessages((prev) => {
         return prev.map((item) => {
           const message = data.messages.find((msg) => msg._id === item._id);
-          return message ? { ...item, status: STATUS.READ } : item;
+          return message ? { ...item, status: CONST.READ } : item;
         });
       });
     } catch {
-      toast.error("Cannot read messages");
+      toast({ description: "Cannot read messages", variant: "destructive" });
+    }
+  };
+
+  const onReaction = async (reaction: string, messageId: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.post<{ updatedMessage: IMessage }>(
+        "/api/user/reaction",
+        { reaction, messageId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessages((prev) =>
+        prev.map((item) =>
+          item._id === data.updatedMessage._id
+            ? { ...item, reaction: data.updatedMessage.reaction }
+            : item
+        )
+      );
+      socket.current?.emit("updateMessage", {
+        updatedMessage: data.updatedMessage,
+        receiver: currentContact,
+        sender: session?.currentUser,
+      });
+    } catch {
+      toast({ description: "Cannot react to message", variant: "destructive" });
+    }
+  };
+
+  const onDeleteMessage = async (messageId: string) => {
+    const token = await generateToken(session?.currentUser?._id);
+    try {
+      const { data } = await axiosClient.delete<{ deletedMessage: IMessage }>(
+        `/api/user/message/${messageId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const filteredMessages = messages.filter(
+        (item) => item._id !== data.deletedMessage._id
+      );
+      const lastMessage = filteredMessages.length
+        ? filteredMessages[filteredMessages.length - 1]
+        : null;
+      setMessages(filteredMessages);
+      socket.current?.emit("deleteMessage", {
+        deletedMessage: data.deletedMessage,
+        sender: session?.currentUser,
+        receiver: currentContact,
+        filteredMessages,
+      });
+      setContacts((prev) =>
+        prev.map((item) =>
+          item._id === currentContact?._id
+            ? {
+                ...item,
+                lastMessage:
+                  item.lastMessage?._id === messageId
+                    ? lastMessage
+                    : item.lastMessage,
+              }
+            : item
+        )
+      );
+    } catch {
+      toast({ description: "Cannot delete message", variant: "destructive" });
     }
   };
 
@@ -285,9 +464,11 @@ const HomePage = () => {
             <TopChat />
             <Chat
               messageForm={messageForm}
-              onSendMessage={onSendMessage}
+              onSubmitMessage={onSubmitMessage}
               messages={messages}
               onReadMessages={onReadMessages}
+              onReaction={onReaction}
+              onDeleteMessage={onDeleteMessage}
             />
           </div>
         )}
@@ -302,4 +483,7 @@ interface GetSocketType {
   receiver: IUser;
   sender: IUser;
   newMessage: IMessage;
+  updatedMessage: IMessage;
+  deletedMessage: IMessage;
+  filteredMessages: IMessage[];
 }

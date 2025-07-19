@@ -1,21 +1,25 @@
 import { useCurrentContact } from "@/hooks/use-current";
+import { CONST } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { IMessage, STATUS } from "@/types";
+import { IMessage } from "@/types";
 import { format } from "date-fns";
-import { Check, CheckCheck } from "lucide-react";
+import { Check, CheckCheck, Edit2, Trash } from "lucide-react";
 import { FC } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../ui/context-menu";
 
 interface Props {
   message: IMessage;
+  onReaction: (reaction: string, messageId: string) => Promise<void>;
+  onDeleteMessage: (messageId: string) => Promise<void>;
 }
-const MessageCard: FC<Props> = ({ message }) => {
-  const { currentContact } = useCurrentContact();
+const MessageCard: FC<Props> = ({ message, onReaction, onDeleteMessage }) => {
+  const { currentContact, setEditedMessage } = useCurrentContact();
 
   const reactions = ["👍", "😂", "❤️", "😍", "👎"];
 
@@ -43,13 +47,17 @@ const MessageCard: FC<Props> = ({ message }) => {
               <p>{format(message.updatedAt, "hh:mm")}</p>
               <div className="self-end">
                 {message.receiver._id === currentContact?._id &&
-                  (message.status === STATUS.READ ? (
+                  (message.status === CONST.READ ? (
                     <CheckCheck size={12} />
                   ) : (
                     <Check size={12} />
                   ))}
               </div>
             </div>
+
+            <span className="absolute -right-2 -bottom-2">
+              {message.reaction}
+            </span>
           </div>
         </div>
       </ContextMenuTrigger>
@@ -62,12 +70,31 @@ const MessageCard: FC<Props> = ({ message }) => {
                 "text-xl cursor-pointer p-1 hover:bg-primary/50 transition-all",
                 message.reaction === reaction && "bg-primary/50"
               )}
-              // onClick={() => onReaction(reaction, message._id)}
+              onClick={() => onReaction(reaction, message._id)}
             >
               {reaction}
             </div>
           ))}
         </ContextMenuItem>
+        {message.sender._id !== currentContact?._id && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              className="cursor-pointer"
+              onClick={() => setEditedMessage(message)}
+            >
+              <Edit2 size={14} className="mr-2" />
+              <span>Edit</span>
+            </ContextMenuItem>
+            <ContextMenuItem
+              className="cursor-pointer"
+              onClick={() => onDeleteMessage(message._id)}
+            >
+              <Trash size={14} className="mr-2" />
+              <span>Delete</span>
+            </ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );

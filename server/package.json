@@ -1,26 +1,27 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
-    "server": "nodemon app.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "description": "",
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.0",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.3",
-    "nodemailer": "^7.0.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
-  }
+	"name": "server",
+	"version": "1.0.0",
+	"main": "app.js",
+	"scripts": {
+		"server": "nodemon app.js"
+	},
+	"keywords": [],
+	"author": "Samar Badriddinov",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"cookie-parser": "^1.4.7",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.21.1",
+		"express-group-routes": "^1.1.0",
+		"http": "^0.0.1-security",
+		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.8.1",
+		"nodemailer": "^6.9.16"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.7"
+	}
 }

@@ -1,7 +1,7 @@
 const CONST = {
-  READ: "read",
-  DELIVERED: "delivered",
-  SENT: "sent",
-};
+	READ: 'read',
+	DELIVERED: 'delivered',
+	SENT: 'sent',
+}
 
-module.exports = CONST;
+module.exports = { CONST }
