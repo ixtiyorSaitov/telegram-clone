@@ -5,7 +5,7 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { messageSchema } from "@/lib/validation";
 import { Paperclip, Send, Smile } from "lucide-react";
-import { FC, useEffect, useRef } from "react";
+import { ChangeEvent, FC, useEffect, useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import emojies from "@emoji-mart/data";
@@ -19,12 +19,22 @@ import { useTheme } from "next-themes";
 import { useLoading } from "@/hooks/use-loading";
 import { IMessage } from "@/types";
 import { useCurrentContact } from "@/hooks/use-current";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { UploadDropzone } from "@/lib/uploadthing";
+import { useSession } from "next-auth/react";
 
 interface Props {
   onSubmitMessage: (values: z.infer<typeof messageSchema>) => Promise<void>;
   onReadMessages: () => Promise<void>;
   onReaction: (reaction: string, messageId: string) => Promise<void>;
   onDeleteMessage: (messageId: string) => Promise<void>;
+  onTyping: (e: ChangeEvent<HTMLInputElement>) => void;
   messageForm: UseFormReturn<z.infer<typeof messageSchema>>;
   messages: IMessage[];
 }
@@ -35,12 +45,25 @@ const Chat: FC<Props> = ({
   onReadMessages,
   onReaction,
   onDeleteMessage,
+  onTyping,
 }) => {
+  const [open, setOpen] = useState(false);
+
   const { loadMessages } = useLoading();
-  const { editedMessage } = useCurrentContact();
+  const { editedMessage, setEditedMessage, currentContact } =
+    useCurrentContact();
+  const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLFormElement | null>(null);
+
+  const filteredMessages = messages.filter(
+    (message) =>
+      (message.sender._id === session?.currentUser?._id &&
+        message.receiver._id === currentContact?._id) ||
+      (message.sender._id === currentContact?._id &&
+        message.receiver._id === session?.currentUser?._id)
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,12 +94,12 @@ const Chat: FC<Props> = ({
   };
 
   return (
-    <div className="flex flex-col justify-end z-40 min-h-[92vh]">
+    <div className="flex flex-col justify-end z-40 min-h-[92vh] sidebar-custom-scrollbar overflow-y-scroll">
       {/* Loading */}
       {loadMessages && <ChatLoading />}
 
       {/* Messages */}
-      {messages.map((message, index) => (
+      {filteredMessages.map((message, index) => (
         <MessageCard
           key={index}
           message={message}
@@ -104,9 +127,27 @@ const Chat: FC<Props> = ({
           className="w-full flex relative"
           ref={scrollRef}
         >
-          <Button size={"icon"} type="button" variant={"secondary"}>
-            <Paperclip />
-          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size={"icon"} type="button" variant={"secondary"}>
+                <Paperclip />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle />
+              </DialogHeader>
+              <UploadDropzone
+                endpoint={"imageUploader"}
+                onClientUploadComplete={(res) => {
+                  onSubmitMessage({ text: "", image: res[0].url });
+                  setOpen(false);
+                }}
+                config={{ appendOnPaste: true, mode: "auto" }}
+              />
+            </DialogContent>
+          </Dialog>
+
           <FormField
             control={messageForm.control}
             name="text"
@@ -118,7 +159,11 @@ const Chat: FC<Props> = ({
                     placeholder="Type a message"
                     value={field.value}
                     onBlur={() => field.onBlur()}
-                    onChange={(e) => field.onChange(e.target.value)}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                      onTyping(e);
+                      if (e.target.value === "") setEditedMessage(null);
+                    }}
                     ref={inputRef}
                   />
                 </FormControl>
